@@ -1,4 +1,4 @@
 [submodule "collections"]
-	path = .
+	path = collections
 	url = https://github.com/mijuanlo/my_ansible_collection
 	branch = collection
