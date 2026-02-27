@@ -1,0 +1,15 @@
+Source: llxlransible
+Section: net
+Priority: optional
+Maintainer: M.Angel Juan <m.angel.juan@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://github.com/lliurex
+Rules-Requires-Root: no
+
+Package: llxlransible
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ansible, systemd, bash (>=5.1)
+Description: Llx Local Runner Ansible
+ Local runner for ansible
+

@@ -1,0 +1,11 @@
+[Unit]
+Description=Llx Local Runner for Ansible
+Requires=llxlransible.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+Unit=llxlransible.service
+
+[Install]
+WantedBy=timers.target
