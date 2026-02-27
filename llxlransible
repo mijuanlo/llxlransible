@@ -2,8 +2,7 @@
 
 set -e
 
-REPO="https://github.com/mijuanlo/llxansible"
-BRANCH="testing_local"
+REPO="https://github.com/mijuanlo/llxlransible"
 WORKDIR="/.root/.ansible-repo"
 PLAYBOOK="local.yml"
 
@@ -14,17 +13,25 @@ export PYTHONDONTWRITEBYTECODE=1
 if [ -d "$WORKDIR/.git" ]; then
     echo "Actualizando repositorio..."
     cd "$WORKDIR"
-    git fetch origin
-    git reset --hard "origin/$BRANCH"
+    # Descargar la última información del repositorio principal (sin aplicarla aún)
+    git fetch origin --all
+    # Forzar el repositorio principal para que sea idéntico a la rama remota
+    git reset --hard "origin/master"
+    # Limpiar cualquier archivo o carpeta no rastreada en el repo principal
     git clean -fd
+    # Actualizar los submódulos a los punteros exactos dictados por el repo principal,
+    # forzando el descarte de cualquier cambio local dentro de ellos
+    git submodule update --init --recursive --force
+    # Limpiar cualquier archivo no rastreado que haya quedado dentro de los submódulos
+    git submodule foreach --recursive git clean -fd
 else
     echo "Clonando repositorio..."
     rm -rf "$WORKDIR"
-    git clone --branch "$BRANCH" "$REPO" "$WORKDIR"
+    git clone --recursive "$REPO" "$WORKDIR"
     cd "$WORKDIR"
 fi
 
-# Ejecutar con ansible-playbook, que S� respeta ansible.cfg local
+# Ejecutar con ansible-playbook (utilizando ansible.cfg local)
 ansible-playbook \
     -i localhost, \
     --connection=local \
