@@ -3,7 +3,7 @@
 set -e
 
 REPO="https://github.com/mijuanlo/llxlransible"
-WORKDIR="/.root/.ansible-repo"
+WORKDIR="/root/.ansible-repo"
 PLAYBOOK="local.yml"
 
 # Variables de entorno
@@ -14,7 +14,7 @@ if [ -d "$WORKDIR/.git" ]; then
     echo "Actualizando repositorio..."
     cd "$WORKDIR"
     # Descargar la última información del repositorio principal (sin aplicarla aún)
-    git fetch origin --all
+    git fetch origin
     # Forzar el repositorio principal para que sea idéntico a la rama remota
     git reset --hard "origin/master"
     # Limpiar cualquier archivo o carpeta no rastreada en el repo principal
