@@ -1,0 +1,88 @@
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Gather last commit
+      command: git rev-parse HEAD
+      register: gits
+      delegate_to: localhost
+      connection: local
+
+- hosts: localhost
+  gather_facts: true
+  serial: 50
+  strategy: free
+  vars:
+    in_last_commit: False
+    forced: False
+
+  pre_tasks:
+    - name: Gather facts
+      include_role:
+        name: llx.lliurex.lliurex
+        tasks_from: facts
+  tasks:
+    - name: End if not initialized
+      meta: end_host
+      when: centro == "" or tipo == "" or nivel == ""
+
+    - name: Mostrar número de hosts activos en ESTA ejecución (si usas limit)
+      debug:
+        msg: "El playbook se está ejecutando contra {{ ansible_play_hosts | length }} hosts."
+      run_once: true
+
+    - name: Gather last commit applied
+      command: cat /etc/lastcommit
+      register: last_commit
+      ignore_errors: true
+
+    - name: Calculate vars
+      set_fact:
+        serialno: "{{ last_commit.stdout | default('Undefined') }}"
+
+#    - name: Display msg if exitting when check last commit
+#      debug:
+#        msg: "PLAYBOOK TERMINATED DUE ALL TASK WAS PREVIOUSLY DONE"
+#      when: forced == "" and last_commit.stdout == gits.stdout
+
+#    - name: Commit check if all task done previously "{{ last_commit.stdout }}" vs "{{ gits.stdout }}"
+#      meta: end_host
+#      when: forced == "" and last_commit.stdout == gits.stdout
+
+    - name: Commit check if all task done previously "{{ last_commit.stdout }}" vs "{{ gits.stdout }}"
+      set_fact:
+        skip_on_last_commit: "{{ last_commit.stdout != gits.stdout or forced != '' }}"
+    
+    - name: Set as in last commit
+      set_fact:
+        in_last_commit: True
+      when: last_commit.stdout == gits.stdout
+
+    - name: Apply role with values --> "{{ centro }}" "{{ tipo }}" "{{ nivel }}" "{{ forced }}" "{{ skip_on_last_commit }}""
+      include_role:
+        name: llx.lliurex.lliurex
+        tasks_from: "{{ item }}"
+      loop:
+        - "all"
+        - "{{ centro }}"
+        - "{{ tipo }}"
+        - "{{ nivel }}"
+        - "{{ centro }}-{{ tipo }}"
+        - "{{ centro }}-{{ nivel }}"
+        - "{{ nivel }}-{{ tipo }}"
+        - "{{ centro }}-{{ nivel }}-{{ tipo }}"
+      when:
+        - not item | regex_search('^[-].*')
+        - not item | regex_search('.*[-]$')
+        - not item | regex_search('--')
+        - item != ""
+
+    - name: Write state files
+      copy:
+        content: "{{ item.content }}"
+        dest: "{{ item.file }}"
+        mode: '0644'
+      loop:
+        - { file: "/etc/lastcommit", content: "{{ gits.stdout }}" }
+      when:
+        - item.content != ''

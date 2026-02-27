@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+REPO="https://github.com/mijuanlo/llxansible"
+BRANCH="testing_local"
+WORKDIR="/.root/.ansible-repo"
+PLAYBOOK="local.yml"
+
+# Variables de entorno
+export PYTHONDONTWRITEBYTECODE=1
+
+# Clonar o actualizar
+if [ -d "$WORKDIR/.git" ]; then
+    echo "Actualizando repositorio..."
+    cd "$WORKDIR"
+    git fetch origin
+    git reset --hard "origin/$BRANCH"
+    git clean -fd
+else
+    echo "Clonando repositorio..."
+    rm -rf "$WORKDIR"
+    git clone --branch "$BRANCH" "$REPO" "$WORKDIR"
+    cd "$WORKDIR"
+fi
+
+# Ejecutar con ansible-playbook, que SÃ respeta ansible.cfg local
+ansible-playbook \
+    -i localhost, \
+    --connection=local \
+    "$PLAYBOOK"
